@@ -1,16 +1,20 @@
-﻿using BookStore.Data;
+﻿using System.Runtime.InteropServices.JavaScript;
+using System.Text.Json;
 using CSharpFileManager.Autorization;
-using CSharpFileManager.Data;
+using CSharpFileManager.Models;
+using CSharpFileManager.Services;
 
 namespace CSharpFileManager;
 
 class Program
 {
-    public static ApplicationContext DbContext() => new ApplicationContextFactory().CreateDbContext();
-
+    public static ServerService _serverService = new ServerService();
+    public static Config HomePath = ConfigurationService.SetConfig();
     static void Main(string[] args)
     {
-
-        Console.WriteLine("Hello, World!");
+        AuthService.LoginOrRegisterAsync();
+        FileService fileService = new FileService();
+        fileService.SyncFilesAsync(HomePath.HomeDirectory);
+        
     }
 }

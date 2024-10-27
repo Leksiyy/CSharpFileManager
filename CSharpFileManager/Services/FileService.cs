@@ -1,83 +1,48 @@
-using BookStore.Data;
+using System.Text.Json;
 using CSharpFileManager.Models;
 
 namespace CSharpFileManager.Services;
 
 public class FileService
 {
-    public void IndexFiles(string directoryPath)
+    private readonly Dictionary<string, DateTime> _localFileIndex = new Dictionary<string, DateTime>(); // хранит последнюю дату изменения для отслеживания
+
+    public async Task SyncFilesAsync(string directoryPath)
     {
         var files = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
+        var updatedFiles = new List<FileMetadata>();
 
         foreach (var filePath in files)
         {
             var fileInfo = new FileInfo(filePath);
-            
-            string FileName = fileInfo.Name;
-            string Extension = fileInfo.Extension;
-            string FilePath = filePath;
-            long FileSize = fileInfo.Length;
-            DateTime CreationTime = fileInfo.CreationTime;
-            DateTime LastModifiedTime = fileInfo.LastWriteTime;
-            //TODO: add owner 
-            
-            SaveFileMetadataToDatabase(FileName, Extension, FilePath, FileSize, CreationTime, LastModifiedTime);
-        }
-    }
-
-    public void SaveFileMetadataToDatabase(string FileName, string Extension, string FilePath, long FileSize, DateTime CreationTime,
-        DateTime LastModifiedTime)
-    {
-        using (ApplicationContext context = Program.DbContext())
-        {
-            var fileMetadata = new FileMetadata
+            if (!_localFileIndex.ContainsKey(filePath) || _localFileIndex[filePath] != fileInfo.LastWriteTime)
             {
-                FileName = FileName,
-                Extension = Extension,
-                Size = FileSize,
-                FilePath = FilePath,
-                CreationTime = CreationTime,
-                LastModifiedTime = LastModifiedTime
-            };
-
-            context.Files.Add(fileMetadata);
-            context.SaveChanges();
-        }
-    }
-
-    public void UpdateFileIndex(string directoryPath)
-    {
-        var files = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
-        using (ApplicationContext context = Program.DbContext())
-        {
-            foreach (var filePath in files)
-            {
-                FileInfo fileInfo = new FileInfo(filePath);
-                    
-                var existingFileMetadata = context.Files.SingleOrDefault(f => f.FilePath == filePath);
-
-                if (existingFileMetadata != null)
+                // только если он новый или изменился
+                updatedFiles.Add(new FileMetadata
                 {
-                    SaveFileMetadataToDatabase(fileInfo.Name, fileInfo.Extension, filePath, filePath.Length,
-                        fileInfo.CreationTime, fileInfo.LastWriteTime);
-                } else if (existingFileMetadata.LastModifiedTime != fileInfo.LastWriteTime)
-                {
-                    existingFileMetadata.Size = fileInfo.Length;
-                    existingFileMetadata.LastModifiedTime = fileInfo.LastWriteTime;
-                    context.SaveChanges();
-                }
-                
-                List<FileMetadata> fileMetadataList = context.Files.ToList();
+                    FileName = fileInfo.Name,
+                    Extension = fileInfo.Extension,
+                    FilePath = filePath,
+                    Size = fileInfo.Length,
+                    CreationTime = fileInfo.CreationTime,
+                    LastModifiedTime = fileInfo.LastWriteTime,
+                    Owner = AuthService.Username
+                });
 
-                foreach (FileMetadata metadata in fileMetadataList)
-                {
-                    if (!File.Exists(metadata.FilePath))
-                    {
-                        context.Files.Remove(metadata);
-                        context.SaveChanges();
-                    }
-                }
+                // Обновляю индекс
+                _localFileIndex[filePath] = fileInfo.LastWriteTime;
             }
+        }
+
+        if (updatedFiles.Any())
+        {
+            string json = JsonSerializer.Serialize(updatedFiles);
+            await Program._serverService.SendAsync("SYNC|" + json);
+            Console.WriteLine("Updated file metadata sent to the server.");
+        }
+        else
+        {
+            Console.WriteLine("No updates found for file metadata.");
         }
     }
 }

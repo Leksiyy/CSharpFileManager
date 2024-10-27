@@ -2,9 +2,9 @@ using CSharpFileManager.Autorization;
 
 namespace CSharpFileManager.Factories;
 
-public class AuthorizationChainFactory
+public static class AuthorizationChainFactory
 {
-    public AuthorizationHandler CreateAuthorizationChain()
+    public static AuthorizationHandler CreateAuthorizationChain()
     {
         var adminHandler = new AdminAuthorizationHandler();
         var userHandler = new UserAuthorizationHandler();

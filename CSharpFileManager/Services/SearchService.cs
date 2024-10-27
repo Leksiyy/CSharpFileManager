@@ -1,5 +1,3 @@
-using CSharpFileManager.Models;
-
 namespace CSharpFileManager.Services;
 
 public class SearchService
