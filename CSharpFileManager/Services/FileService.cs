@@ -29,7 +29,7 @@ public class FileService
                     Owner = AuthService.Username
                 });
 
-                // Обновляю индекс
+                // обновляю индекс
                 _localFileIndex[filePath] = fileInfo.LastWriteTime;
             }
         }
@@ -45,4 +45,31 @@ public class FileService
             Console.WriteLine("No updates found for file metadata.");
         }
     }
+    
+    private async Task HandleFileSendRequest(string message)
+    {
+        string[] parts = message.Split('|');
+        string fileName = parts[1];
+        string requestingClientId = parts[2];
+
+        // читаю и отправляю файл
+        if (File.Exists(fileName))
+        {
+            using FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+        
+            while ((bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await Program._serverService.SendBytesAsync(buffer);
+            }
+        
+            Console.WriteLine($"File '{fileName}' sent to {requestingClientId}.");
+        }
+        else
+        {
+            Console.WriteLine($"File '{fileName}' not found.");
+        }
+    }
+
 }

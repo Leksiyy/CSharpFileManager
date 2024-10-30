@@ -10,7 +10,7 @@ public class ServerService : IDisposable
     private TcpClient _tcpClient;
     private NetworkStream _networkStream;
 
-    public async Task ConnectAsync()
+    private async Task ConnectAsync()
     {
         try
         {
@@ -25,9 +25,9 @@ public class ServerService : IDisposable
         }
     }
 
-    public async Task SendAsync(string message)
+    public async Task SendAsync(string message) // а это уже для метадаты
     {
-        if (_networkStream == null)
+        if (_networkStream == null!)
         {
             await ConnectAsync();
         }
@@ -35,7 +35,7 @@ public class ServerService : IDisposable
         try
         {
             byte[] data = Encoding.UTF8.GetBytes(message);
-            await _networkStream.WriteAsync(data, 0, data.Length);
+            await _networkStream!.WriteAsync(data, 0, data.Length);
         }
         catch (Exception ex)
         {
@@ -44,9 +44,19 @@ public class ServerService : IDisposable
         }
     }
 
+    public async Task SendBytesAsync(byte[] message) // для передачи файлов, а не метадаты
+    {
+        if (_networkStream == null!)
+        {
+            await ConnectAsync();
+        }
+        
+        _networkStream!.WriteAsync(message, 0, message.Length);
+    }
+    
     public async Task<string?> ReceiveAsync()
     {
-        if (_networkStream == null)
+        if (_networkStream == null!)
         {
             await ConnectAsync();
         }
@@ -70,6 +80,18 @@ public class ServerService : IDisposable
         _networkStream?.Close();
         _tcpClient?.Close();
         Console.WriteLine("Disconnected from the server.");
+    }
+
+    public bool IsConnected()
+    {
+        try
+        {
+            return _tcpClient?.Connected == true && (_networkStream?.CanRead ?? false);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void Dispose()

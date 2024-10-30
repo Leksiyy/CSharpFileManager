@@ -36,6 +36,14 @@ namespace CSharpFileManager.Repository
                 _context.SaveChanges();
             }
         }
+        
+        public static (FileMetadata fileMetadata, string owner) FindFileAndOwner(string fileName)
+        {
+            var fileMetadata = _context.Files.SingleOrDefault(f => f.FileName == fileName);
+            return (fileMetadata != null 
+                ? (fileMetadata, fileMetadata.Owner) 
+                : (null, null))!;
+        }
 
         public static void UpdateFileIndex(IEnumerable<FileMetadata> fileMetadataList)
         {

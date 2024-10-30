@@ -27,6 +27,8 @@ public static class AuthService
     
     private static async Task LoginAsync()
     {
+        
+        //TODO: добавь тут логин через гостя если все поля введены пусто.
         Console.Write("Username: ");
         string username = Console.ReadLine();
 
