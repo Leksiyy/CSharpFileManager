@@ -19,4 +19,14 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0-rc.2.24473.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="userSettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="bin\Debug\net8.0\FileManager\DummyFile.cs" />
+    </ItemGroup>
+
 </Project>

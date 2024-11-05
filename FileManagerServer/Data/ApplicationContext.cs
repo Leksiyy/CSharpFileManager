@@ -18,7 +18,6 @@ namespace BookStore.Data
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,7 +27,7 @@ namespace BookStore.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.LogTo(Console.WriteLine, new[] { RelationalEventId.CommandExecuted });
+            //optionsBuilder.LogTo(Console.WriteLine, new[] { RelationalEventId.CommandExecuted });
             base.OnConfiguring(optionsBuilder);
         }
 

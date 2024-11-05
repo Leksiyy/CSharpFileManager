@@ -9,15 +9,29 @@ namespace CSharpFileManager;
 class Program
 {
     public static ServerService _serverService = new ServerService(); // сервак с интерфейсом для всей программы
-    public static Config HomePath = ConfigurationService.SetConfig(); // конфигурация домашней директории
+    public static FileService _fileService = new FileService();
+    public static Config HomePath; // конфигурация домашней директории
     
     static async Task Main(string[] args)
     {
-        if (_serverService.IsConnected())
-        {
-            await AuthService.LoginOrRegisterAsync();
-            FileService fileService = new FileService();
-            await fileService.SyncFilesAsync(HomePath.HomeDirectory);
-        }
+        await _serverService.ConnectAsync();
+        Console.WriteLine("connect: " + _serverService.IsConnected());
+        MenuService menuService = new MenuService();
+        await menuService.RunAsync();
     }
 }
+
+
+
+
+
+
+
+
+
+// if (_serverService.IsConnected())
+// {
+//     await AuthService.LoginOrRegisterAsync();
+//     FileService fileService = new FileService();
+//     await fileService.SyncFilesAsync(HomePath.HomeDirectory);
+// }

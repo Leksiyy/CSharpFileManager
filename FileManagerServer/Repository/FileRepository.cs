@@ -10,10 +10,11 @@ namespace CSharpFileManager.Repository
     {
         private static readonly ApplicationContext _context = Program.DbContext();
 
-        public static void AddFileMetadata(FileMetadata fileMetadata)
+        private static async Task AddFileMetadataAsync(FileMetadata fileMetadata)
         {
-            _context.Files.Add(fileMetadata);
-            _context.SaveChanges();
+            Console.WriteLine("Added new file metadata");
+            await _context.Files.AddAsync(fileMetadata);
+            await _context.SaveChangesAsync();
         }
 
         public static void UpdateFileMetadata(FileMetadata fileMetadata)
@@ -45,20 +46,24 @@ namespace CSharpFileManager.Repository
                 : (null, null))!;
         }
 
-        public static void UpdateFileIndex(IEnumerable<FileMetadata> fileMetadataList)
+        public static async Task UpdateFileIndex(IEnumerable<FileMetadata> fileMetadataList)
         {
             foreach (var fileMetadata in fileMetadataList)
             {
                 var existingFile = _context.Files.SingleOrDefault(f => f.FilePath == fileMetadata.FilePath);
                 if (existingFile == null)
                 {
-                    _context.Files.Add(fileMetadata);
+                    await AddFileMetadataAsync(fileMetadata);
                 }
                 else if (existingFile.LastModifiedTime != fileMetadata.LastModifiedTime)
                 {
                     existingFile.Size = fileMetadata.Size;
                     existingFile.LastModifiedTime = fileMetadata.LastModifiedTime;
                 }
+                // else if () TODO: сделай что бы файлы из базы тоже удалялись
+                // {
+                //     
+                // }
             }
 
             // если записсей не существует - удалить
